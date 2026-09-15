@@ -78,3 +78,22 @@ Show the human, so they are never stuck:
 - Never run the write step without having shown the final list.
 - Never report protection without the Step 4 live test — in both directions.
 - If any step fails, report the failure and what you tried. A confident-sounding non-answer is the worst outcome.
+
+## Contributor notes (for agents changing the scripts, not for end users)
+
+- **Windows PowerShell 5.1 gotchas** (CI runs 5.1 *and* 7; both must pass): `ConvertTo-Json` defaults
+  to `-Depth 2` and silently truncates — a one-element array collapses to a string and a `-contains`
+  test still passes, so fixtures use two-element arrays and every `ConvertTo-Json` passes an explicit
+  `-Depth`. Some profiles' extension manifests under `User Data` are ACL-protected: wrap the whole
+  scan loop in try/catch or one unreadable profile aborts detection. A `.ps1` containing CJK text
+  must be saved UTF-8 **with BOM** or 5.1 mangles it.
+- **macOS bash 3.2 gotchas**: the script runs `set -euo pipefail`, so every optional positional
+  is read as `${n:-}` — keep that form. No `declare -A` (bash 3.2 has none); flat arrays only.
+  Tests run under the system `/bin/bash` 3.2, not Homebrew bash.
+- **Tests are mutation-verified**: after editing a validator or merge path, break it on purpose and
+  confirm a test fails; a suite that stays green under mutation is not testing that path.
+- **Catalog changes** (`catalog/hosts.json`): only hosts confirmed on the real login page, with the
+  verification date; exact hosts, never wildcards; add `keep_open` siblings you actually checked.
+- **Release ritual**: CHANGELOG entry (both languages) → commit explicit paths → `git tag vX.Y.Z` →
+  GitHub release. Docs-only edits (README, this file) ride the next release tag. Backups written by
+  the tool stay under `~/.ai-browser-lockdown/` — do not rename that path; users have real backups there.
