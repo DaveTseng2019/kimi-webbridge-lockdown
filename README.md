@@ -14,6 +14,23 @@ The counter-intuitive part, confirmed by hands-on testing (2026-08-09, Edge on W
 
 The only per-host control that actually works is the **enterprise policy layer**: `ExtensionSettings` → `runtime_blocked_hosts`. With it set, the extension gets `Cannot attach to this target` on blocked sites and works normally everywhere else. Verified in both directions on a real setup (13 blocked hosts refused, unblocked automation targets unaffected).
 
+> **⚠ From Chrome / Edge 155, this policy no longer blocks per host.**
+> Measured on Windows on 2026-10-12 with the Claude in Chrome extension:
+>
+> - If an extension's `runtime_blocked_hosts` is **non-empty**, its `chrome.debugger.attach()` fails on **every site**.
+> - The error is `Host access is restricted by policy.`, not the older `Cannot attach to this target`.
+> - The unblocked `example.com` fails too, even with only 3 bank hosts on the list.
+>   Measured on Chrome 155.0.8059.39. Edge 155.0.4283.45 was not tested while the block was in place.
+> - After the block is removed and the browser is fully restarted, `example.com` works again on both Chrome and Edge.
+> - Screenshots fail too, with the same error (observed on Chrome on 2026-10-10).
+>
+> According to the official post, adding `runtime_allowed_hosts` does not help (not tested here):
+> [Stricter enterprise policy enforcement for chrome.debugger in Chrome 155](https://developer.chrome.com/blog/debugger-enterprise-policy-restrictions)
+>
+> So on 155 and later, this tool has only two outcomes: the extension **cannot** use the debugger anywhere, or it can use it **everywhere**.
+> "Works normally everywhere else" above and the "both directions" live test below apply to 154 and earlier only.
+> macOS was not tested on 155.
+
 This tool makes that policy a guided, reversible, one-command setup.
 
 ## What it does

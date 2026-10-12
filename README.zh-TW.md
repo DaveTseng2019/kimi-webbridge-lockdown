@@ -14,6 +14,23 @@ AI coding agent 可以透過擴充套件（Kimi WebBridge、Claude in Chrome 等
 
 真正有效的逐 host 控制在**企業政策層**：`ExtensionSettings` → `runtime_blocked_hosts`。設定後，擴充在被封網站得到 `Cannot attach to this target`，其他網站完全不受影響。已在真實環境雙向驗證（13 個要害 host 全部拒絕 attach、自動化該用的網站照常通行）。
 
+> **⚠ Chrome／Edge 155 起，這個政策不再是逐 host 封鎖。**
+> 2026-10-12 在 Windows 上用 Claude in Chrome 擴充實測：
+>
+> - 只要某個擴充的 `runtime_blocked_hosts` **不是空的**，這個擴充的 `chrome.debugger.attach()` 在**所有網站**都失敗。
+> - 錯誤訊息是 `Host access is restricted by policy.`，不是舊版的 `Cannot attach to this target`。
+> - 沒有封鎖的 `example.com` 也失敗。清單只有 3 個網銀 host 時也一樣。
+>   這是在 Chrome 155.0.8059.39 上測的。Edge 155.0.4283.45 在封鎖期間沒有測到。
+> - 移除封鎖、完全重啟瀏覽器後，Chrome 與 Edge 的 `example.com` 都恢復正常。
+> - 截圖也失敗，錯誤訊息相同（2026-10-10 在 Chrome 上觀察到）。
+>
+> 依官方說明，另外加 `runtime_allowed_hosts` 也解不開（未實測）：
+> [Stricter enterprise policy enforcement for chrome.debugger in Chrome 155](https://developer.chrome.com/blog/debugger-enterprise-policy-restrictions)
+>
+> 所以在 155 版之後，這個工具只剩兩種結果：擴充**完全不能**用 debugger 操作瀏覽器，或者**所有網站**都能操作。
+> 上面「其他網站完全不受影響」與下面的「雙向實測」只適用於 154 版以前。
+> macOS 沒有在 155 版實測。
+
 這個工具把該政策做成有引導、可還原的一鍵設定。
 
 ## 它做什麼

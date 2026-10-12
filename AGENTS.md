@@ -63,6 +63,8 @@ Policy read-back is not proof; the browser must actually enforce it. After the h
 2. **Test the block:** try to open/attach to one blocked host through your own browser control. Expect failure (`Cannot attach to this target`). You attempting and failing IS the proof.
 3. **Test the control direction:** open an unblocked site the human normally automates. It must still work.
 
+**Chrome / Edge 155 and later:** step 3 fails too — every host fails with `Host access is restricted by policy.` once `runtime_blocked_hosts` is non-empty (measured 2026-10-12; see the README warning). That is the browser's new behavior, not a broken lockdown. Tell the human plainly that the lock now disables you on every site, and let them decide whether to keep it. Do not rationalize it as a precise block.
+
 Report both results verbatim. If the blocked host still opens, say so plainly and stop — do not rationalize a failed lockdown as success. (Check: browser fully restarted? policy level Mandatory? host exactly right?)
 
 ## Step 5 — Teach the exits
