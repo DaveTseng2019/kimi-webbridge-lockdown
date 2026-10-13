@@ -1,5 +1,25 @@
 # Changelog
 
+## v0.1.1 — 2026-10-13
+
+Final release. **Not recommended on Chrome 155+ / Edge 154+; the project is no longer maintained and the repository will be archived.** Documentation only — the scripts are unchanged.
+
+- **Chrome 155 / Edge 154 warning** (#4, thanks [@DaveTseng2019](https://github.com/DaveTseng2019) for the measurements and the patch, following up on #3): from these versions a non-empty `runtime_blocked_hosts` disables `chrome.debugger.attach()` on **every** site (`Host access is restricted by policy.`), so the per-host lock becomes all-or-nothing.
+- **Version boundary**: Chrome 155 / Edge 154 (Microsoft's ExtensionSettings page and the Chromium policy text say 154; the Chrome post says 155). Version 154 itself is marked as untested.
+- **Caveat on older versions**: per-host blocking of `chrome.debugger` is best-effort even before 155 — Chrome states that origin-based filtering cannot securely restrict CDP.
+- **AGENTS.md**: the agent checks the browser version in Step 0 and stops before applying anything on Chrome 155+ / Edge 154+; Step 4 accepts both error strings as "blocked". Contributor notes added for people changing the scripts.
+- **README**: status banner at the top, a Requirements section (works on Chrome ≤154 / Edge ≤153; the temporary `--disable-features=ExtensionDebuggerStrictPolicyRestrictions` flag, removed in Chrome 160; do not downgrade a browser for this tool), and the recommended alternative: a separate browser profile for the agent, and no AI browser-control extension in the browser you use for critical sites.
+
+---
+
+最終版。**Chrome 155+／Edge 154+ 不建議使用；本專案停止維護，repo 將封存。** 只改文件，腳本沒有變動。
+
+- **Chrome 155／Edge 154 警告**（#4，感謝 [@DaveTseng2019](https://github.com/DaveTseng2019) 實測並送 patch，接續 #3）：從這些版本起，只要 `runtime_blocked_hosts` 不是空的，`chrome.debugger.attach()` 在**所有**網站都失敗（`Host access is restricted by policy.`），逐 host 封鎖變成全有或全無。
+- **版本界線**：Chrome 155／Edge 154（Microsoft ExtensionSettings 文件與 Chromium 政策說明寫 154，Chrome 官方文寫 155）。154 版本身標為未實測。
+- **舊版的但書**：即使在 155 以前，逐 host 封鎖 `chrome.debugger` 也只是盡力而為——Chrome 官方說明 origin 過濾無法安全地限制 CDP。
+- **AGENTS.md**：agent 在 Step 0 先查瀏覽器版本，遇到 Chrome 155+／Edge 154+ 就在寫入前停下；Step 4 兩種錯誤字串都算「已封鎖」。另加上給改腳本的人看的貢獻者注意事項。
+- **README**：頂端狀態說明、相容性段（可用 Chrome ≤154／Edge ≤153；暫時旗標 `--disable-features=ExtensionDebuggerStrictPolicyRestrictions` 在 Chrome 160 移除；不要為了這個工具降版瀏覽器），以及建議的替代做法：給 agent 獨立的瀏覽器設定檔，開要害網站的瀏覽器不裝 AI 瀏覽器控制擴充。
+
 ## v0.1.0 — 2026-08-09
 
 Initial release.

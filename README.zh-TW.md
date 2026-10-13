@@ -4,6 +4,23 @@
 
 把 AI 瀏覽器控制擴充擋在你的網銀、券商、信箱之外——其他網站照常讓它自動化。
 
+> **狀態：Chrome 155+／Edge 154+ 不建議使用，本專案已停止維護。**
+> 在這些版本上，瀏覽器把這個工具的逐站封鎖變成全有或全無的開關：AI 擴充會在**所有**網站失去 `chrome.debugger`，不只是你的網銀（細節見[下方警告](#問題在哪)）。
+> 目前沒有任何政策鍵能把「逐站封鎖 debugger」找回來。本 repo 於 v0.1.1 封存；還能用的版本見[相容性](#相容性)。
+>
+> **改用什麼：** 給 agent 一個**專用的瀏覽器設定檔**（或另一個瀏覽器），那裡從不登入網銀、券商、信箱，AI 擴充只裝在那裡。你平常開要害網站的那個瀏覽器，**不裝任何** AI 瀏覽器控制擴充。保護來自「分開」，而不是一份 host 清單——不必逐一列舉，也不會被瀏覽器改版打掉。
+
+## 相容性
+
+| 瀏覽器 | 照本文運作的版本 | 備註 |
+|---|---|---|
+| Google Chrome | **154 以前** | 155 起全有或全無（[Chrome 官方文](https://developer.chrome.com/blog/debugger-enterprise-policy-restrictions)）。Chromium 原始碼的政策說明寫 154，且 154 本身沒有實測——154 視為不確定。 |
+| Microsoft Edge | **153 以前** | 154 起全有或全無（[Microsoft ExtensionSettings 文件](https://learn.microsoft.com/en-us/deployedge/microsoft-edge-browser-policies/extensionsettings)：「As of Microsoft Edge version 154 …」）。 |
+
+- Windows：Windows PowerShell 5.1 或 PowerShell 7，寫入政策需要系統管理員權限。macOS：系統內建 bash、`sudo`。
+- **暫時的回頭路：** 用 `--disable-features=ExtensionDebuggerStrictPolicyRestrictions` 啟動瀏覽器可以回到舊的逐 host 行為，但 Chrome 官方文說這個旗標**會在 Chrome 160 移除**。而且只有帶著這個旗標啟動時才有效（從工作列、開機自動啟動、點連結叫起瀏覽器都可能沒帶到），Edge 是否認同一個 feature 名稱也沒有查證。
+- **不要為了這個工具把瀏覽器降版。** 停在舊版瀏覽器就收不到安全更新，風險遠大於這個工具要處理的問題。如果你本來就因為其他原因停在舊版，下面的說明照樣適用——但請記得警告裡「盡力而為」的但書。
+
 ## 問題在哪
 
 AI coding agent 可以透過擴充套件（Kimi WebBridge、Claude in Chrome 等）直接操作你的真實瀏覽器。其中一類用的是 `chrome.debugger` API 加上 `<all_urls>` 權限：**一次拿到你所有網站的登入身分**，不是逐頁問你同意。
@@ -12,7 +29,30 @@ AI coding agent 可以透過擴充套件（Kimi WebBridge、Claude in Chrome 等
 
 > **擴充套件設定裡的逐站「網站存取權」白名單，擋不住 debugger 型擴充。** 那層 UI 只收回 `host_permissions`（content script、webRequest 那類）；`debugger` 是 API 權限、全域生效——就算你把某網站從清單移除，它照樣能 attach 到該分頁、讀取內容、執行 JavaScript。
 
-真正有效的逐 host 控制在**企業政策層**：`ExtensionSettings` → `runtime_blocked_hosts`。設定後，擴充在被封網站得到 `Cannot attach to this target`，其他網站完全不受影響。已在真實環境雙向驗證（13 個要害 host 全部拒絕 attach、自動化該用的網站照常通行）。
+真正有效的逐 host 控制在**企業政策層**：`ExtensionSettings` → `runtime_blocked_hosts`。設定後，擴充在被封網站得到 `Cannot attach to this target`，其他網站完全不受影響。已在真實環境雙向驗證（13 個要害 host 全部拒絕 attach、自動化該用的網站照常通行）。*（只適用於舊版瀏覽器——見下方警告。）*
+
+> **⚠ Chrome 155／Edge 154 起，這個政策不再是逐 host 封鎖。**
+> 2026-10-12 在 Windows 上用 Claude in Chrome 擴充實測：
+>
+> - 只要某個擴充的 `runtime_blocked_hosts` **不是空的**，這個擴充的 `chrome.debugger.attach()` 在**所有網站**都失敗。
+> - 錯誤訊息是 `Host access is restricted by policy.`，不是舊版的 `Cannot attach to this target`。
+> - 沒有封鎖的 `example.com` 也失敗。清單只有 3 個網銀 host 時也一樣。
+>   這是在 Chrome 155.0.8059.39 上測的。Edge 155.0.4283.45 在封鎖期間沒有測到。
+> - 移除封鎖、完全重啟瀏覽器後，Chrome 與 Edge 的 `example.com` 都恢復正常。
+> - 截圖也失敗，錯誤訊息相同（2026-10-10 在 Chrome 上觀察到）。
+>
+> 依官方說明，另外加 `runtime_allowed_hosts` 也解不開（未實測）：
+> [Stricter enterprise policy enforcement for chrome.debugger in Chrome 155](https://developer.chrome.com/blog/debugger-enterprise-policy-restrictions)
+>
+> 官方來源對「從哪一版開始」說法不一致：Chrome 官方文寫 Chrome 155；
+> [Microsoft 的 ExtensionSettings 文件](https://learn.microsoft.com/en-us/deployedge/microsoft-edge-browser-policies/extensionsettings)
+> 與 Chromium 原始碼的政策說明寫 154。154 版本身沒有實測。
+>
+> 所以在 Chrome 155+／Edge 154+，這個工具只剩兩種結果：擴充**完全不能**用 debugger 操作瀏覽器，或者**所有網站**都能操作。
+> 上面「其他網站完全不受影響」與下面的「雙向實測」只適用於更早的版本。
+> 即使在舊版，逐 host 封鎖也只能算「盡力而為」、不是保證：同一篇 Chrome 官方文說明，CDP 在網頁 origin 模型的底層運作，
+> 用 origin 過濾本來就沒辦法安全地限制它——這正是 Chrome 改成全有或全無的原因。
+> macOS 沒有在 155 版實測。
 
 這個工具把該政策做成有引導、可還原的一鍵設定。
 
