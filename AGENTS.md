@@ -19,6 +19,8 @@ Identify OS and browser, then show the human where they stand:
 
 This lists every installed extension holding the `debugger` permission — likely including the one you drive — and what is currently blocked. Explain the headline finding to the human: the per-site "site access" whitelist in the extensions UI does **not** restrain these extensions; only this policy layer does (see README for the measurements).
 
+**Then check the browser version before going any further** (`chrome://version` / `edge://version`). On **Chrome 155+ or Edge 154+**, stop here and tell the human plainly: once `runtime_blocked_hosts` is non-empty, the browser blocks the extension's `chrome.debugger` on **every** site, not just the listed ones (error `Host access is restricted by policy.`; see the README warning). The lock is now all-or-nothing — applying it disables you everywhere. Let the human decide whether they still want that, and point them to the README's alternative (a separate browser profile for the agent). Do not apply anything until they have decided. Official sources disagree on the exact first version (Chrome post: 155; Microsoft and the Chromium policy text: 154), and 154 itself was not measured, so treat 154 as affected.
+
 ## Step 1 — Interview: what should be off-limits?
 
 Ask, one category at a time. Typical high-stakes categories:
@@ -60,10 +62,10 @@ Both scripts back up the current policy first, merge (never overwrite), and veri
 Policy read-back is not proof; the browser must actually enforce it. After the human **fully restarts the browser** (all windows AND background processes / Cmd+Q):
 
 1. Confirm the policy page: `edge://policy` / `chrome://policy` must show `ExtensionSettings` — on macOS the level must read **Mandatory** (Recommended = no protection — a measured false positive; see the README table).
-2. **Test the block:** try to open/attach to one blocked host through your own browser control. Expect failure (`Cannot attach to this target`). You attempting and failing IS the proof.
+2. **Test the block:** try to open/attach to one blocked host through your own browser control. Expect failure: `Cannot attach to this target` on older browsers, `Host access is restricted by policy.` on Chrome 155+ / Edge 154+ — both mean blocked. You attempting and failing IS the proof.
 3. **Test the control direction:** open an unblocked site the human normally automates. It must still work.
 
-**Chrome / Edge 155 and later:** step 3 fails too — every host fails with `Host access is restricted by policy.` once `runtime_blocked_hosts` is non-empty (measured 2026-10-12; see the README warning). That is the browser's new behavior, not a broken lockdown. Tell the human plainly that the lock now disables you on every site, and let them decide whether to keep it. Do not rationalize it as a precise block.
+**Chrome 155+ / Edge 154+ (if the human chose to lock anyway after Step 0):** step 3 fails too — every host fails with `Host access is restricted by policy.` once `runtime_blocked_hosts` is non-empty (measured 2026-10-12; see the README warning). That is the browser's new behavior, not a broken lockdown. Tell the human plainly that the lock now disables you on every site, and let them decide whether to keep it. Do not rationalize it as a precise block.
 
 Report both results verbatim. If the blocked host still opens, say so plainly and stop — do not rationalize a failed lockdown as success. (Check: browser fully restarted? policy level Mandatory? host exactly right?)
 

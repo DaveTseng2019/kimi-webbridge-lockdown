@@ -14,7 +14,7 @@ The counter-intuitive part, confirmed by hands-on testing (2026-08-09, Edge on W
 
 The only per-host control that actually works is the **enterprise policy layer**: `ExtensionSettings` → `runtime_blocked_hosts`. With it set, the extension gets `Cannot attach to this target` on blocked sites and works normally everywhere else. Verified in both directions on a real setup (13 blocked hosts refused, unblocked automation targets unaffected).
 
-> **⚠ From Chrome / Edge 155, this policy no longer blocks per host.**
+> **⚠ From Chrome 155 / Edge 154, this policy no longer blocks per host.**
 > Measured on Windows on 2026-10-12 with the Claude in Chrome extension:
 >
 > - If an extension's `runtime_blocked_hosts` is **non-empty**, its `chrome.debugger.attach()` fails on **every site**.
@@ -27,8 +27,15 @@ The only per-host control that actually works is the **enterprise policy layer**
 > According to the official post, adding `runtime_allowed_hosts` does not help (not tested here):
 > [Stricter enterprise policy enforcement for chrome.debugger in Chrome 155](https://developer.chrome.com/blog/debugger-enterprise-policy-restrictions)
 >
-> So on 155 and later, this tool has only two outcomes: the extension **cannot** use the debugger anywhere, or it can use it **everywhere**.
-> "Works normally everywhere else" above and the "both directions" live test below apply to 154 and earlier only.
+> Official sources disagree on the first affected version: the Chrome post says Chrome 155, while
+> [Microsoft's ExtensionSettings page](https://learn.microsoft.com/en-us/deployedge/microsoft-edge-browser-policies/extensionsettings)
+> and the Chromium policy definition say 154. Version 154 itself was not tested here.
+>
+> So on Chrome 155+ / Edge 154+, this tool has only two outcomes: the extension **cannot** use the debugger anywhere, or it can use it **everywhere**.
+> "Works normally everywhere else" above and the "both directions" live test below apply to earlier versions only.
+> Even there, treat per-host blocking as best-effort, not a guarantee: the same Chrome post explains that CDP
+> "operates beneath the web platform's origin model, [so] origin-based filtering cannot securely restrict it" —
+> which is why Chrome switched to all-or-nothing.
 > macOS was not tested on 155.
 
 This tool makes that policy a guided, reversible, one-command setup.
