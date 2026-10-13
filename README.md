@@ -4,6 +4,23 @@
 
 Lock AI browser-control extensions out of your bank, broker, and mailbox — while letting them automate everything else.
 
+> **Status: not recommended on Chrome 155+ / Edge 154+, and no longer maintained.**
+> On these versions the browser turns this tool's per-site block into an all-or-nothing switch: the AI extension loses `chrome.debugger` on **every** site, not just your bank (details in [the warning below](#the-problem)).
+> There is no policy key that brings per-site debugger blocking back. The repository is archived as of v0.1.1; see [Requirements](#requirements) for the versions it still works on.
+>
+> **What to do instead:** give the agent its **own browser profile** (or a separate browser) that is never logged in to your bank, broker, or mailbox, and install the AI extension only there. Keep **no** AI browser-control extension in the browser you use for those critical sites. The protection then comes from separation, not from a host list — nothing to enumerate, and no browser version can undo it.
+
+## Requirements
+
+| Browser | Works as described | Notes |
+|---|---|---|
+| Google Chrome | **154 and earlier** | 155+ is all-or-nothing ([Chrome post](https://developer.chrome.com/blog/debugger-enterprise-policy-restrictions)). The Chromium policy text names 154, and 154 itself was not tested — treat 154 as uncertain. |
+| Microsoft Edge | **153 and earlier** | 154+ is all-or-nothing ([Microsoft ExtensionSettings](https://learn.microsoft.com/en-us/deployedge/microsoft-edge-browser-policies/extensionsettings): "As of Microsoft Edge version 154 …"). |
+
+- Windows: Windows PowerShell 5.1 or PowerShell 7, admin rights to write the policy. macOS: system bash, `sudo`.
+- **Temporary escape hatch:** starting the browser with `--disable-features=ExtensionDebuggerStrictPolicyRestrictions` restores the old per-host behavior, but the Chrome post says this flag **will be removed in Chrome 160**. It only applies when the browser is launched with that flag (taskbar, autostart, or a link opening the browser can bypass it), and whether Edge honors the same feature name was not verified.
+- **Do not downgrade your browser to use this tool.** An old browser stops receiving security updates, which is a far bigger risk than the one this tool addresses. If you are already on an older version for other reasons, the tool still works as documented below — with the best-effort caveat in the warning.
+
 ## The problem
 
 AI coding agents can drive your real browser through extensions (Kimi WebBridge, Claude in Chrome, and similar). Some of these use the `chrome.debugger` API with `<all_urls>` host permissions: they get **your logged-in identity on every site, all at once**.
@@ -12,7 +29,7 @@ The counter-intuitive part, confirmed by hands-on testing (2026-08-09, Edge on W
 
 > **The per-site "site access" whitelist in the extensions UI does NOT stop debugger-based extensions.** That UI only withholds `host_permissions` (content scripts, webRequest). The `debugger` API permission is granted globally — the extension can still attach to any tab, read the page, and run JavaScript, even on sites you removed from its list.
 
-The only per-host control that actually works is the **enterprise policy layer**: `ExtensionSettings` → `runtime_blocked_hosts`. With it set, the extension gets `Cannot attach to this target` on blocked sites and works normally everywhere else. Verified in both directions on a real setup (13 blocked hosts refused, unblocked automation targets unaffected).
+The only per-host control that actually works is the **enterprise policy layer**: `ExtensionSettings` → `runtime_blocked_hosts`. With it set, the extension gets `Cannot attach to this target` on blocked sites and works normally everywhere else. Verified in both directions on a real setup (13 blocked hosts refused, unblocked automation targets unaffected). *(Older browsers only — see the warning below.)*
 
 > **⚠ From Chrome 155 / Edge 154, this policy no longer blocks per host.**
 > Measured on Windows on 2026-10-12 with the Claude in Chrome extension:
